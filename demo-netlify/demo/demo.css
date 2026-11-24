@@ -1,0 +1,16 @@
+/* Static-demo notice. Styled to sit under the console header in the dark theme. */
+.demo-notice {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 8px 24px; background: var(--raised-2); color: var(--ink-on-dark);
+  border-bottom: 1px solid var(--evidence); font-size: 13px; line-height: 1.5;
+}
+.demo-notice p { margin: 0; flex: 1; min-width: 0; }
+.demo-notice strong { color: var(--evidence); letter-spacing: .02em; }
+.demo-notice a { color: var(--evidence); text-decoration: underline; text-underline-offset: 2px; white-space: nowrap; }
+.demo-notice a:hover { color: var(--ink-on-dark); }
+.demo-notice button {
+  flex: none; background: transparent; border: 1px solid var(--rule-strong); color: var(--muted);
+  border-radius: 3px; width: 26px; height: 26px; line-height: 1; font-size: 16px; cursor: pointer;
+}
+.demo-notice button:hover { color: var(--ink-on-dark); border-color: var(--muted); }
+@media (max-width: 960px) { .demo-notice { padding: 8px 16px; } }
