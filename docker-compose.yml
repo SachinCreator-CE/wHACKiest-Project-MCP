@@ -1,0 +1,42 @@
+# SentinelAI on a single EC2 t4g.small (arm64; python:3.12-slim is multi-arch).
+#
+# Credentials: attach an IAM instance role with the rendered policy
+# (infra/iam/sentinel-app-policy.rendered.json). No keys are mounted, no ~/.aws,
+# and AWS_PROFILE is deliberately not set so boto3 uses the instance role.
+# With IMDSv2, containers need one extra hop to reach instance metadata:
+#   aws ec2 modify-instance-metadata-options --instance-id <ID> \
+#     --http-tokens required --http-put-response-hop-limit 2
+# The UI has no login: allow port 8000 only from your own IP in the security
+# group, or keep it closed and use `ssh -L 8000:localhost:8000 ec2-user@<host>`.
+#
+# Values below are substituted from your shell or a local .env; the container
+# itself never reads .env (it is excluded by .dockerignore).
+services:
+  sentinel:
+    build: .
+    image: sentinelai:latest
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      SENTINEL_MODE: ${SENTINEL_MODE:-auto}
+      AWS_REGION: ${AWS_REGION:-ap-south-1}
+      CLOUDTRAIL_REGIONS: ${CLOUDTRAIL_REGIONS:-ap-south-1,us-east-1}
+      BEDROCK_REGION: ${BEDROCK_REGION:-ap-south-1}
+      BEDROCK_MODEL_ID: ${BEDROCK_MODEL_ID:-apac.amazon.nova-lite-v1:0}
+      BEDROCK_GUARDRAIL_ID: ${BEDROCK_GUARDRAIL_ID:-}
+      BEDROCK_GUARDRAIL_VERSION: ${BEDROCK_GUARDRAIL_VERSION:-}
+      S3_BUCKET: ${S3_BUCKET:?set S3_BUCKET (run scripts/aws_setup.py first)}
+      AUTH_LOG_GROUP: ${AUTH_LOG_GROUP:-/sentinelai/app-auth}
+      DEMO_LEAKED_ACCESS_KEY_ID: ${DEMO_LEAKED_ACCESS_KEY_ID:-}
+      DEMO_VICTIM_USER: ${DEMO_VICTIM_USER:-sentinel-demo-victim}
+      DEMO_LEAK_FLAGGED_AT: ${DEMO_LEAK_FLAGGED_AT:-}
+      ALLOW_REAL_ACTIONS: ${ALLOW_REAL_ACTIONS:-false}
+      REAL_ACTION_USER_ALLOWLIST: ${REAL_ACTION_USER_ALLOWLIST:-sentinel-demo-victim}
+      # Prefer Secrets Manager on EC2 so the ElevenLabs key is not in the environment.
+      ELEVENLABS_SECRET_ID: ${ELEVENLABS_SECRET_ID:-}
+    volumes:
+      - sentinel-var:/app/var
+
+volumes:
+  sentinel-var:
