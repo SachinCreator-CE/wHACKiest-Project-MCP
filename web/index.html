@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SentinelAI Console</title>
+  <meta name="description" content="SentinelAI: security-incident agent on AWS">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 2 4 7v8c0 7.4 5.1 13.3 12 15 6.9-1.7 12-7.6 12-15V7z' fill='%235E93CC'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#incident-detail">Skip to incident detail</a>
+
+  <header class="topbar">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+        <path d="M16 2 4 7v8c0 7.4 5.1 13.3 12 15 6.9-1.7 12-7.6 12-15V7z" />
+        <path class="brand-eye" d="M9 16c2-3.2 4.4-4.8 7-4.8s5 1.6 7 4.8c-2 3.2-4.4 4.8-7 4.8S11 19.2 9 16z" />
+        <circle class="brand-pupil" cx="16" cy="16" r="2.2" />
+      </svg>
+      <span class="wordmark">Sentinel<span>AI</span></span>
+    </div>
+    <div class="topbar-status" role="status" aria-live="polite">
+      <span id="aws-pill" class="pill pill-muted"><span class="dot" aria-hidden="true"></span><span id="aws-label">Checking AWS…</span></span>
+      <span id="model-chip" class="chip" title="Amazon Bedrock model"><span class="chip-k">Bedrock</span><span id="model-id">…</span></span>
+      <span id="voice-chip" class="chip" title="Voice provider"><span class="chip-k">Voice</span><span id="voice-provider">…</span></span>
+    </div>
+    <button id="detect-btn" class="btn btn-primary" type="button">
+      <span class="btn-spinner" aria-hidden="true"></span><span class="btn-label">Run detection</span>
+    </button>
+  </header>
+
+  <div id="banner" class="banner" role="alert" hidden></div>
+
+  <main class="layout">
+    <!-- Incidents -->
+    <section class="panel incidents" aria-labelledby="incidents-h">
+      <div class="panel-head">
+        <h2 id="incidents-h">Incidents</h2>
+        <span id="incident-count" class="count-badge" aria-label="Incident count">0</span>
+      </div>
+      <ul id="incident-list" class="incident-list" aria-label="Incident list"></ul>
+      <p id="incidents-empty" class="empty">No incidents yet. Run detection to scan GitHub, CloudTrail and app auth logs.</p>
+    </section>
+
+    <!-- Incident detail -->
+    <section id="incident-detail" class="panel detail" aria-labelledby="detail-h" tabindex="-1">
+      <div id="detail-empty" class="empty detail-empty">
+        <h2 id="detail-h">Select an incident</h2>
+        <p>Pick an incident on the left to open its case file: risk score, timeline, evidence and proposed remediation. No incidents yet? Press Run detection.</p>
+      </div>
+      <div id="detail-body" hidden>
+        <div class="case-top">
+          <span class="case-label">Case file</span>
+          <span id="d-stamps" class="stamps" aria-label="Case status stamps"></span>
+        </div>
+        <div class="detail-head">
+          <div class="detail-id">
+            <div class="detail-meta">
+              <span id="d-id" class="case-no mono"></span>
+              <span id="d-severity" class="sev"></span>
+              <span id="d-status" class="chip"></span>
+              <span id="d-mode" class="chip"></span>
+            </div>
+            <h2 id="d-title" class="detail-title"></h2>
+          </div>
+          <div id="d-risk" class="classification" aria-label="Risk classification"></div>
+        </div>
+        <details id="d-risk-how" class="risk-how" hidden>
+          <summary>How this score is calculated</summary>
+          <p id="d-risk-method" class="risk-method"></p>
+          <ul id="d-risk-factors" class="risk-factors"></ul>
+        </details>
+        <div class="detail-tools"><button id="report-btn-top" class="btn btn-ghost" type="button">Generate report</button></div>
+        <h3 class="section-h">Summary</h3>
+        <p id="d-summary" class="summary"></p>
+        <h3 class="section-h">Entities</h3>
+        <div id="d-entities" class="entities" aria-label="Entities"></div>
+        <h3 class="section-h">Counts</h3>
+        <div id="d-counts" class="tiles" aria-label="Counts"></div>
+
+        <h3 class="section-h">Timeline</h3>
+        <div class="table-wrap">
+          <table class="timeline" aria-label="Event timeline">
+            <thead>
+              <tr><th scope="col">Time (UTC)</th><th scope="col">Source</th><th scope="col">Event</th><th scope="col">Actor · IP</th><th scope="col">Outcome · data</th></tr>
+            </thead>
+            <tbody id="d-timeline"></tbody>
+          </table>
+        </div>
+
+        <div class="split">
+          <div>
+            <h3 class="section-h">Evidence</h3>
+            <ul id="d-evidence" class="evidence"></ul>
+          </div>
+          <div>
+            <h3 class="section-h">Actions <span class="hint">Agent proposes · human approves</span></h3>
+            <ul id="d-actions" class="actions"></ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Agent chat -->
+    <section class="panel chat" aria-labelledby="chat-h">
+      <div class="panel-head">
+        <h2 id="chat-h">Copilot</h2>
+        <label class="toggle">
+          <input id="speak-toggle" type="checkbox">
+          <span class="toggle-track" aria-hidden="true"></span>
+          <span>Speak answers</span>
+        </label>
+      </div>
+      <div id="chat-context" class="chat-context"></div>
+      <div id="chat-log" class="chat-log" role="log" aria-live="polite" aria-label="Agent conversation">
+        <div class="suggestions" id="suggestions">
+          <p class="muted">Try asking:</p>
+          <button type="button" class="suggestion">What happened in this incident?</button>
+          <button type="button" class="suggestion">Was the leaked key used after GitHub flagged it?</button>
+          <button type="button" class="suggestion">Is priya's account compromised?</button>
+          <button type="button" class="suggestion">What should we do next?</button>
+        </div>
+      </div>
+      <form id="chat-form" class="chat-form">
+        <label for="chat-input" class="sr-only">Ask the agent</label>
+        <textarea id="chat-input" rows="2" placeholder="Ask about this incident…" maxlength="4000"></textarea>
+        <div class="chat-buttons">
+          <button id="mic-btn" class="btn btn-icon" type="button" aria-pressed="false" aria-label="Start voice input" title="Voice input">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.9V21h2v-2.1A7 7 0 0 0 19 12z"/></svg>
+          </button>
+          <button id="send-btn" class="btn btn-primary" type="submit">Send</button>
+        </div>
+      </form>
+      <p id="voice-note" class="voice-note" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <!-- Bottom tabs -->
+  <section class="panel bottom" aria-label="Evidence timeline: audit, reports and tool calls">
+    <div class="tabs" role="tablist" aria-label="Records">
+      <button class="tab" role="tab" id="tab-audit" aria-controls="pane-audit" aria-selected="true">Audit trail</button>
+      <button class="tab" role="tab" id="tab-reports" aria-controls="pane-reports" aria-selected="false" tabindex="-1">Reports</button>
+      <button class="tab" role="tab" id="tab-trace" aria-controls="pane-trace" aria-selected="false" tabindex="-1">MCP activity</button>
+      <span class="tabs-spacer"></span>
+      <span id="chain-badge" class="chip" hidden></span>
+    </div>
+    <div id="pane-audit" class="tab-pane" role="tabpanel" aria-labelledby="tab-audit">
+      <div class="table-wrap">
+        <table class="grid" aria-label="Audit log">
+          <thead><tr><th scope="col">#</th><th scope="col">Time</th><th scope="col">Actor</th><th scope="col">Action</th><th scope="col">Incident</th><th scope="col">Details</th><th scope="col">Hash</th></tr></thead>
+          <tbody id="audit-body"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="pane-reports" class="tab-pane" role="tabpanel" aria-labelledby="tab-reports" hidden>
+      <div class="pane-toolbar">
+        <span id="reports-where" class="muted"></span>
+        <button id="report-btn" class="btn btn-ghost" type="button">Generate report for current incident</button>
+      </div>
+      <ul id="reports-list" class="reports"></ul>
+    </div>
+    <div id="pane-trace" class="tab-pane" role="tabpanel" aria-labelledby="tab-trace" hidden>
+      <ol id="trace-list" class="trace trace-open etl"></ol>
+    </div>
+  </section>
+
+  <!-- Approve / reject dialog -->
+  <dialog id="decision-dialog" class="dialog" aria-labelledby="dlg-title">
+    <form method="dialog" id="decision-form">
+      <h2 id="dlg-title">Approve action</h2>
+      <p id="dlg-action" class="dlg-action"></p>
+      <div id="dlg-mode" class="dlg-mode"></div>
+      <label for="dlg-approver">Your name (recorded in the audit log)</label>
+      <input id="dlg-approver" autocomplete="name" required maxlength="80">
+      <div id="dlg-reason-wrap" hidden>
+        <label for="dlg-reason">Reason</label>
+        <input id="dlg-reason" maxlength="300">
+      </div>
+      <p id="dlg-error" class="dlg-error" role="alert"></p>
+      <div class="dlg-buttons">
+        <button type="button" id="dlg-cancel" class="btn btn-ghost">Cancel</button>
+        <button type="submit" id="dlg-confirm" class="btn btn-primary">Approve</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="app.js" defer></script>
+</body>
+</html>

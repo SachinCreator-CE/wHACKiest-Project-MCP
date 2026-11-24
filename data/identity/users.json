@@ -1,0 +1,75 @@
+[
+  {
+    "username": "priya",
+    "display_name": "Priya Sharma",
+    "email": "priya.sharma@example.com",
+    "team": "payments-platform",
+    "title": "Senior Backend Engineer",
+    "kind": "human",
+    "aws_iam_user": "priya",
+    "mfa_enabled": true,
+    "usual_geo": [
+      "Mumbai, IN"
+    ],
+    "usual_ips": [
+      "49.36.112.58",
+      "49.36.118.7"
+    ],
+    "work_hours_local": "09:00-19:00 IST"
+  },
+  {
+    "username": "arjun",
+    "display_name": "Arjun Mehta",
+    "email": "arjun.mehta@example.com",
+    "team": "payments-platform",
+    "title": "Backend Engineer",
+    "kind": "human",
+    "aws_iam_user": null,
+    "mfa_enabled": true,
+    "usual_geo": [
+      "Bengaluru, IN"
+    ],
+    "usual_ips": [
+      "49.207.52.18",
+      "49.207.48.103"
+    ],
+    "work_hours_local": "09:30-18:30 IST",
+    "notes": "Replaced laptop on 2026-11-20 (IT ticket IT-4821)."
+  },
+  {
+    "username": "sentinel-demo-victim",
+    "display_name": "Billing service deploy user",
+    "email": "billing-oncall@example.com",
+    "team": "payments-platform",
+    "title": "IAM service user",
+    "kind": "service",
+    "aws_iam_user": "sentinel-demo-victim",
+    "owner": "priya",
+    "key_owner": true,
+    "mfa_enabled": false,
+    "usual_geo": [
+      "ap-south-1 (AWS)"
+    ],
+    "usual_ips": [],
+    "notes": "Owns the access key committed to acme-payments/billing-service config/settings.py. Least-privilege; should never call IAM."
+  },
+  {
+    "username": "ci-deployer",
+    "display_name": "CI deploy pipeline",
+    "email": "platform-ci@example.com",
+    "team": "platform-infra",
+    "title": "IAM service user",
+    "kind": "service",
+    "aws_iam_user": "ci-deployer",
+    "owner": "platform-infra",
+    "key_owner": true,
+    "mfa_enabled": false,
+    "usual_geo": [
+      "ap-south-1 (AWS)"
+    ],
+    "usual_ips": [
+      "13.233.47.112"
+    ],
+    "notes": "GitHub Actions runner on EC2; describes instances and uploads release artifacts."
+  }
+]

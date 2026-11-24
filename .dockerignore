@@ -1,0 +1,13 @@
+.git
+.github
+.venv
+.env
+.env.*
+!.env.example
+var
+**/__pycache__
+**/*.pyc
+.pytest_cache
+.DS_Store
+infra/iam/*.rendered.json
+tests
