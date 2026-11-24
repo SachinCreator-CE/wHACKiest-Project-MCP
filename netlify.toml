@@ -1,0 +1,6 @@
+# Netlify serves the static console demo, not the Python app.
+# Base is the demo folder, so Netlify won't try to install requirements.txt.
+[build]
+  base = "demo-netlify"
+  publish = "."
+  command = ""
